@@ -12,6 +12,7 @@ declare module 'vue' {
     BTSidebar: typeof import('./src/components/templates/BT-Sidebar/index.vue')['default']
     Customers: typeof import('./src/components/pages/Customers/index.vue')['default']
     ElAside: typeof import('element-plus/es')['ElAside']
+    ElAutocomplete: typeof import('element-plus/es')['ElAutocomplete']
     ElBreadcrumb: typeof import('element-plus/es')['ElBreadcrumb']
     ElBreadcrumbItem: typeof import('element-plus/es')['ElBreadcrumbItem']
     ElButton: typeof import('element-plus/es')['ElButton']

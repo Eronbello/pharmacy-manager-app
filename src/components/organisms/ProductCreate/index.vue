@@ -1,4 +1,6 @@
 <!-- eslint-disable vue/multi-word-component-names -->
+<!-- eslint-disable @typescript-eslint/no-explicit-any -->
+<!-- eslint-disable vue/multi-word-component-names -->
 <template>
   <el-form
     :inline="true"
@@ -8,7 +10,12 @@
     size="large"
   >
     <el-form-item label="Nome do Produto">
-      <el-input v-model="formProduct.Name" placeholder="Nome do Produto" clearable />
+      <el-autocomplete
+        v-model="autosuggestion"
+        :fetch-suggestions="querySearch"
+        placeholder="Please input"
+        @select="handleSelect"
+      />
     </el-form-item>
     <el-form-item label="Descrição">
       <el-input v-model="formProduct.Description" placeholder="Descrição do Produto" clearable />
@@ -40,28 +47,87 @@
 </template>
 
 <script lang="ts" setup>
-import { reactive, defineEmits } from 'vue'
+import { reactive, defineEmits, ref, onMounted } from 'vue'
+import medicines from '@/assets/medicines.json'
 import dayjs from 'dayjs'
+
+// Estado para o autocomplete
+const autosuggestion = ref<string>('') // Valor selecionado
+const suggestions = ref<Array<{ value: string }>>([]) // Lista de sugestões
 
 const emit = defineEmits(['onAddItem', 'onCancel'])
 
+// Dados iniciais do formulário
 const formProduct = reactive({
-  Name: 'Novo Produto',
-  Description: 'Descrição do novo produto.',
-  StockQuantity: 100,
-  Manufacturer: 'New Manufacturer',
-  ExpirationDate: dayjs().add(1, 'year').toISOString(),
-  BatchNumber: 'NEW-BATCH-001',
+  Name: '',
+  Description: '',
+  StockQuantity: 0,
+  Manufacturer: '',
+  ExpirationDate: '',
+  BatchNumber: '',
 })
 
+// Função para lidar com o envio do formulário
 const onSubmit = () => {
   emit('onAddItem', { ...formProduct })
+
+  formProduct.Name = ''
+  formProduct.Description = ''
+  formProduct.StockQuantity = 0
+  formProduct.Manufacturer = ''
+  formProduct.ExpirationDate = ''
+  formProduct.BatchNumber = ''
 }
 
+// Função para cancelar o formulário
 const onCancel = () => {
   emit('onCancel')
+
+  formProduct.Name = ''
+  formProduct.Description = ''
+  formProduct.StockQuantity = 0
+  formProduct.Manufacturer = ''
+  formProduct.ExpirationDate = ''
+  formProduct.BatchNumber = ''
+}
+
+// Carregar dados ao montar o componente
+onMounted(() => {
+  // Transformar os dados do JSON em um formato compatível com o autocomplete
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  suggestions.value = medicines.map((item: any) => ({ value: item.drug }))
+})
+
+// Função chamada durante a busca
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const querySearch = (queryString: string, cb: (results: any[]) => void) => {
+  // Filtra os itens com base na entrada do usuário
+  const filteredResults = suggestions.value.filter((item) =>
+    item.value.toLowerCase().includes(queryString.toLowerCase())
+  )
+
+  // Remove duplicatas usando um Set
+  const uniqueResults = Array.from(
+    new Set(filteredResults.map((item) => item.value))
+  ).map((uniqueValue) => {
+    return filteredResults.find((item) => item.value === uniqueValue)!
+  })
+
+  // Limita a 10 resultados
+  cb(uniqueResults.slice(0, 10))
+}
+
+// Função chamada ao selecionar uma sugestão
+const handleSelect = (item: { value: string }) => {
+  autosuggestion.value = item.value
+  const selectedMedicine = medicines.find((med) => med.drug === item.value)
+
+  if (selectedMedicine) {
+    formProduct.Name = selectedMedicine.drug
+  }
 }
 </script>
+
 
 <style>
 .demo-form-inline .el-input {
