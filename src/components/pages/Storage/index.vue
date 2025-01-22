@@ -22,7 +22,7 @@
   </div>
   <el-table
     ref="multipleTableRef"
-    :data="tableData"
+    :data="paginatedData"
     :key="key"
     row-key="ID"
     style="width: 100%"
@@ -55,7 +55,7 @@
   <div class="pagination">
     <el-pagination
       layout="prev, pager, next, sizes, total"
-      :total="tableData.length"
+      :total="backupData.length"
       :page-size="pageSize"
       :current-page="currentPage"
       @size-change="handleSizeChange"
@@ -156,6 +156,8 @@ const deleteRow = async (index: number) => {
 
 
   tableData.value.splice(actualIndex, 1)
+
+  backupData = [ ...tableData.value]
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -179,6 +181,8 @@ const handleAddItem = async (product: any) => {
       type: 'success',
     })
     tableData.value.push(product as never)
+
+    backupData = [ ...tableData.value]
   }
 }
 
@@ -204,12 +208,14 @@ const handlePageChange = (newPage: number) => {
 }
 
 const handleSearch = () => {
+  currentPage.value = 1 // Reseta a página
   tableData.value = [...backupData].filter(item =>
     item.Name?.toLowerCase().includes(search.value.toLowerCase())
   )
 }
 
 const clearFilters = () => {
+  currentPage.value = 1 // Reseta a página
   tableData.value = [...backupData]
 }
 
