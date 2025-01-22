@@ -122,9 +122,7 @@ const handleSelect = (item: { value: string }) => {
   autosuggestion.value = item.value
   const selectedMedicine = medicines.find((med) => med.drug === item.value)
 
-  if (selectedMedicine) {
-    formProduct.Name = selectedMedicine.drug
-  }
+  formProduct.Name = String(selectedMedicine?.drug)
 }
 </script>
 

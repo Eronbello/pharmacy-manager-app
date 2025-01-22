@@ -10,21 +10,33 @@
     <el-text class="mb-1" size="large">Produtos</el-text>
     <el-button type="primary" @click="onAddItem">Adicionar Produto</el-button>
   </el-row>
+  <div class="search-container">
+    <el-input
+      v-model="search"
+      style="width: 240px"
+      placeholder="Nome do produto"
+      :suffix-icon="Search"
+    />
+    <el-button type="primary" @click="handleSearch">Filtrar Produtos</el-button>
+    <el-button class="clear-button" type="danger" @click="clearFilters">Limpar filtros</el-button>
+  </div>
   <el-table
     ref="multipleTableRef"
     :data="tableData"
+    :key="key"
     row-key="ID"
     style="width: 100%"
     max-height="400"
     :row-class-name="tableRowClassName"
+    :default-sort="{ prop: 'ExpirationDate', order: 'ascending' }"
     @selection-change="handleSelectionChange"
   >
     <el-table-column type="selection" width="55" />
-    <el-table-column prop="Name" label="Nome do Produto" />
+    <el-table-column sortable prop="Name" label="Nome do Produto" />
     <el-table-column prop="Description" label="Descrição" />
     <el-table-column prop="StockQuantity" label="Quantidade" />
     <el-table-column prop="Manufacturer" label="Fabricante" />
-    <el-table-column prop="ExpirationDate" label="Data de Validade">
+    <el-table-column sortable prop="ExpirationDate" label="Data de Validade">
       <template #default="scope">
         {{ formatDate(scope.row.ExpirationDate) }}
       </template>
@@ -39,6 +51,7 @@
       </template>
     </el-table-column>
   </el-table>
+  <el-progress v-if="isLoading" :percentage="50" :indeterminate="true" />
   <div class="pagination">
     <el-pagination
       layout="prev, pager, next, sizes, total"
@@ -56,11 +69,17 @@
 import { ref, computed, onMounted } from 'vue'
 import dayjs from 'dayjs'
 import ProductCreate from '@/components/organisms/ProductCreate/index.vue'
+import { ElMessage } from 'element-plus'
+import { Search } from '@element-plus/icons-vue'
 
 const dialogVisible = ref(false)
+const search = ref('')
 
 // Dados fornecidos
-const tableData = ref([])
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const tableData = ref([]) as any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let backupData: any[] = []
 
 const tableRowClassName = ({
   row,
@@ -79,7 +98,7 @@ const tableRowClassName = ({
 
   // Verifica se está faltando 1 mês para expirar
   if (expirationDate.diff(today, 'month') === 1) {
-     return 'warning-row' // Expirado
+     return 'danger-row' // Expirado
   }
 
   // Verifica se está faltando 2 meses para expirar
@@ -92,6 +111,7 @@ const tableRowClassName = ({
 
 const currentPage = ref(1)
 const pageSize = ref(5)
+const key = ref(0)
 const isLoading = ref(true)
 
 // Dados paginados
@@ -122,12 +142,17 @@ const deleteRow = async (index: number) => {
   const product = tableData.value[actualIndex] as any
 
   await fetch(`https://naked-eydie-bellos-tech-3517c645.koyeb.app/products/${product.ID}`, {
-  method: 'DELETE',
-  headers: {
-    'Accept': 'application/json',
-    'Content-Type': 'application/json'
-  },
-});
+    method: 'DELETE',
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json'
+    },
+  });
+
+  ElMessage({
+    message: 'Produto removido com sucesso!',
+    type: 'success',
+  })
 
 
   tableData.value.splice(actualIndex, 1)
@@ -148,6 +173,11 @@ const handleAddItem = async (product: any) => {
     });
 
     const content = await rawResponse.json();
+
+    ElMessage({
+      message: 'Produto adicionado com sucesso!',
+      type: 'success',
+    })
     tableData.value.push(product as never)
   }
 }
@@ -173,6 +203,17 @@ const handlePageChange = (newPage: number) => {
   currentPage.value = newPage
 }
 
+const handleSearch = () => {
+  tableData.value = [...backupData].filter(item =>
+    item.Name?.toLowerCase().includes(search.value.toLowerCase())
+  )
+}
+
+const clearFilters = () => {
+  tableData.value = [...backupData]
+}
+
+
 onMounted(async () => {
     const rawResponse = await fetch('https://naked-eydie-bellos-tech-3517c645.koyeb.app/products', {
       method: 'GET',
@@ -183,6 +224,7 @@ onMounted(async () => {
     });
 
     tableData.value = await rawResponse.json();
+    backupData = [ ...tableData.value]
     isLoading.value = false
 })
 </script>
@@ -191,13 +233,27 @@ onMounted(async () => {
 .product {
   &__header {
     margin-bottom: 2rem;
+
+    & > button {
+      margin-left: 10px;
+    }
   }
+}
+
+.search-container {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
 }
 
 .pagination {
   margin-top: 50px;
   display: flex;
   justify-content: center;
+}
+
+.clear-button {
+  margin-left: 0 !important;
 }
 </style>
 
@@ -215,5 +271,9 @@ onMounted(async () => {
 }
 .el-table .success-row {
   --el-table-tr-bg-color: var(--el-color-success-light-9);
+}
+
+.el-progress__text {
+  display: none;
 }
 </style>
