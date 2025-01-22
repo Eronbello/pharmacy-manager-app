@@ -74,6 +74,7 @@ const onSubmit = () => {
   emit('onAddItem', { ...formProduct })
 
   formProduct.Name = ''
+  autosuggestion.value = ''
   formProduct.Description = ''
   formProduct.StockQuantity = 0
   formProduct.Manufacturer = ''
@@ -86,6 +87,7 @@ const onCancel = () => {
   emit('onCancel')
 
   formProduct.Name = ''
+  autosuggestion.value = ''
   formProduct.Description = ''
   formProduct.StockQuantity = 0
   formProduct.Manufacturer = ''
