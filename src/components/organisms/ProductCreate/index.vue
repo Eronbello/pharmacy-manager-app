@@ -15,6 +15,7 @@
         :fetch-suggestions="querySearch"
         placeholder="Please input"
         @select="handleSelect"
+        @blur="handleBlur"
       />
     </el-form-item>
     <el-form-item label="Descrição">
@@ -123,6 +124,11 @@ const handleSelect = (item: { value: string }) => {
   autosuggestion.value = item.value
 
   formProduct.Name = item.value
+}
+
+const handleBlur = () => {
+  // Garante que o valor digitado seja atribuído ao formProduct
+  formProduct.Name = autosuggestion.value
 }
 </script>
 
