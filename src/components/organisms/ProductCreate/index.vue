@@ -29,7 +29,8 @@
     <el-form-item label="Data de Validade">
       <el-date-picker
         v-model="formProduct.ExpirationDate"
-        type="date"
+        type="month"
+        format="MM-YYYY"
         placeholder="Data de Validade"
         clearable
       />
@@ -120,9 +121,8 @@ const querySearch = (queryString: string, cb: (results: any[]) => void) => {
 // Função chamada ao selecionar uma sugestão
 const handleSelect = (item: { value: string }) => {
   autosuggestion.value = item.value
-  const selectedMedicine = medicines.find((med) => med.drug === item.value)
 
-  formProduct.Name = String(selectedMedicine?.drug)
+  formProduct.Name = item.value
 }
 </script>
 
