@@ -22,11 +22,11 @@
   </div>
   <el-table
     ref="multipleTableRef"
-    :data="paginatedData"
+    :data="tableData"
     :key="key"
     row-key="ID"
     style="width: 100%"
-    max-height="400"
+    max-height="100%"
     :row-class-name="tableRowClassName"
     :default-sort="{ prop: 'ExpirationDate', order: 'ascending' }"
     @selection-change="handleSelectionChange"
@@ -45,24 +45,13 @@
     <el-table-column fixed="right" label="Operações">
       <template #default="scope">
         <!-- <el-button link type="primary" size="small">Editar</el-button> -->
-        <el-button link type="primary" size="small" @click.prevent="deleteRow(scope.$index)"
+        <el-button link type="primary" size="small" @click="deleteRow(scope.$index, scope.row)"
           >Remover</el-button
         >
       </template>
     </el-table-column>
   </el-table>
   <el-progress v-if="isLoading" :percentage="50" :indeterminate="true" />
-  <div class="pagination">
-    <el-pagination
-      layout="prev, pager, next, sizes, total"
-      :total="backupData.length"
-      :page-size="pageSize"
-      :current-page="currentPage"
-      @size-change="handleSizeChange"
-      @current-change="handlePageChange"
-      background
-    />
-  </div>
 </template>
 
 <script lang="ts" setup>
@@ -74,6 +63,7 @@ import { Search } from '@element-plus/icons-vue'
 
 const dialogVisible = ref(false)
 const search = ref('')
+const filterDueDate = ref(false)
 
 // Dados fornecidos
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -135,13 +125,11 @@ const handleClose = () => {
 }
 
 // Remove uma linha da tabela
-const deleteRow = async (index: number) => {
-  const actualIndex = (currentPage.value - 1) * pageSize.value + index
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const deleteRow = async (index: number, row: any) => {
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const product = tableData.value[actualIndex] as any
 
-  await fetch(`https://naked-eydie-bellos-tech-3517c645.koyeb.app/products/${product.ID}`, {
+  await fetch(`https://naked-eydie-bellos-tech-3517c645.koyeb.app/products/${row.ID}`, {
     method: 'DELETE',
     headers: {
       'Accept': 'application/json',
@@ -155,7 +143,7 @@ const deleteRow = async (index: number) => {
   })
 
 
-  tableData.value.splice(actualIndex, 1)
+  tableData.value = [...tableData.value].filter(item => item.ID !== row.ID)
 
   backupData = [ ...tableData.value]
 }
@@ -180,6 +168,9 @@ const handleAddItem = async (product: any) => {
       message: 'Produto adicionado com sucesso!',
       type: 'success',
     })
+
+    product.ID = content.id
+
     tableData.value.push(product as never)
 
     backupData = [ ...tableData.value]
