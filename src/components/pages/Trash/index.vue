@@ -1,16 +1,11 @@
 <!-- eslint-disable vue/multi-word-component-names -->
+<!-- Trash.vue -->
 <template>
-  <el-dialog v-model="dialogVisible" title="Medicamentos" width="500" :before-close="handleClose">
-    <ProductCreate
-      @onCancel="dialogVisible = false"
-      :items="tableData"
-      @onAddItem="(product) => handleAddItem(product)"
-    />
-  </el-dialog>
   <el-row class="row-bg product__header" justify="space-between">
-    <el-text class="mb-1" size="large">Produtos</el-text>
-    <el-button type="primary" @click="onAddItem">Adicionar Produto</el-button>
+    <el-text class="mb-1" size="large">Lixeira</el-text>
+    <!-- Botão de adicionar produto removido -->
   </el-row>
+
   <div class="search-container">
     <el-input
       v-model="search"
@@ -21,6 +16,7 @@
     <el-button type="primary" @click="handleSearch">Filtrar Produtos</el-button>
     <el-button class="clear-button" type="danger" @click="clearFilters">Limpar filtros</el-button>
   </div>
+
   <el-table
     ref="multipleTableRef"
     :data="tableData"
@@ -47,9 +43,8 @@
     <el-table-column prop="BatchNumber" label="Lote" />
     <el-table-column fixed="right" label="Operações">
       <template #default="scope">
-        <!-- <el-button link type="primary" size="small">Editar</el-button> -->
-        <el-button link type="primary" size="small" @click="deleteRow(scope.$index, scope.row)"
-          >Remover</el-button
+        <el-button link type="primary" size="small" @click="restoreRow(scope.$index, scope.row)"
+          >Recuperar</el-button
         >
       </template>
     </el-table-column>
@@ -58,55 +53,40 @@
 </template>
 
 <script lang="ts" setup>
+/* ------------------------------------------------------------------
+   IMPORTS
+   ------------------------------------------------------------------ */
 import { ref, computed, onMounted } from 'vue'
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
-import ProductCreate from '@/components/organisms/ProductCreate/index.vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search } from '@element-plus/icons-vue'
 
 dayjs.extend(utc)
 
-const dialogVisible = ref(false)
+/* ------------------------------------------------------------------
+   ESTADO LOCAL
+   ------------------------------------------------------------------ */
 const search = ref('')
 const filterDueDate = ref(false)
 
-// Dados fornecidos
+// Dados da tabela
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const tableData = ref([]) as any
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let backupData: any[] = []
 
-const tableRowClassName = ({
-  row,
-  rowIndex,
-}: {
-  row: { ExpirationDate: string; Name: string }
-  rowIndex: number
-}) => {
-  const today = dayjs() // Data atual
+const tableRowClassName = ({ row }: { row: { ExpirationDate: string; Name: string } }) => {
+  const today = dayjs()
   const expirationDate = dayjs(row.ExpirationDate)
 
-  console.log(row.Name, {
-    diff: expirationDate.diff(today, 'day'),
-  })
-
-  // Verifica se a data de validade já passou
-  if (expirationDate.isBefore(today, 'day')) {
-    return 'danger-row' // Expirado
-  }
-
-  // Verifica se está faltando 1 mês para expirar
+  // Se a data de validade já passou ou está prestes a passar
   if (expirationDate.diff(today, 'day') <= 30) {
-    return 'danger-row' // Expirado
-  }
-
-  // Verifica se está faltando 2 meses para expirar
-  if (expirationDate.diff(today, 'day') <= 60) {
+    return 'danger-row'
+  } else if (expirationDate.diff(today, 'day') <= 60) {
     return 'yellow-row'
   }
-
-  return '' // Sem classe específica
+  return ''
 }
 
 const currentPage = ref(1)
@@ -114,7 +94,7 @@ const pageSize = ref(5)
 const key = ref(0)
 const isLoading = ref(true)
 
-// Dados paginados
+// Paginação
 const paginatedData = computed(() => {
   const start = (currentPage.value - 1) * pageSize.value
   const end = start + pageSize.value
@@ -125,75 +105,41 @@ const multipleTableRef = ref()
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const selectedProducts = ref([]) as any
 
-// Formata a data para exibição
+/* ------------------------------------------------------------------
+   FUNÇÕES DE APOIO
+   ------------------------------------------------------------------ */
 const formatDate = (date: string) => {
   return dayjs.utc(date).format('DD/MM/YYYY')
 }
 
-const handleClose = () => {
-  dialogVisible.value = false
-}
-
-// Remove uma linha da tabela
+// Ao recuperar (restaurar) uma linha
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const deleteRow = async (index: number, row: any) => {
-  ElMessageBox.confirm('Tem certeza que deseja deletar esse item?')
+const restoreRow = async (index: number, row: any) => {
+  ElMessageBox.confirm('Tem certeza que deseja recuperar esse item?')
     .then(async () => {
+      // Faz a requisição para alterar Category para 'recovered'
       await fetch(`https://naked-eydie-bellos-tech-3517c645.koyeb.app/products/${row.ID}`, {
-        method: 'patch',
+        method: 'PATCH',
         headers: {
           Accept: 'application/json',
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ ...row, Category: 'deleted' }),
+        body: JSON.stringify({ ...row, Category: 'recovered' }),
       })
 
       ElMessage({
-        message: 'Produto removido com sucesso!',
+        message: 'Produto recuperado com sucesso!',
         type: 'success',
       })
 
-      tableData.value = [...tableData.value].filter((item) => item.ID !== row.ID)
-
+      // Remove o item do array atual, pois ele não está mais "deleted"
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      tableData.value = tableData.value.filter((item: any) => item.ID !== row.ID)
       backupData = [...tableData.value]
     })
     .catch(() => {
-      // catch error
+      // Caso usuário cancele a confirmação
     })
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const handleAddItem = async (product: any) => {
-  dialogVisible.value = false
-
-  if (product) {
-    const rawResponse = await fetch('https://naked-eydie-bellos-tech-3517c645.koyeb.app/products', {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(product),
-    })
-
-    const content = await rawResponse.json()
-
-    ElMessage({
-      message: 'Produto adicionado com sucesso!',
-      type: 'success',
-    })
-
-    product.ID = content.id
-
-    tableData.value.push(product as never)
-
-    backupData = [...tableData.value]
-  }
-}
-
-// Adiciona um novo produto (exemplo fictício)
-const onAddItem = () => {
-  dialogVisible.value = true
 }
 
 // Lida com a mudança de seleção
@@ -202,27 +148,31 @@ const handleSelectionChange = (val: any[]) => {
   selectedProducts.value = val
 }
 
-// Paginação
-const handleSizeChange = (newSize: number) => {
-  pageSize.value = newSize
-  currentPage.value = 1
-}
-
-const handlePageChange = (newPage: number) => {
-  currentPage.value = newPage
-}
-
+// Pesquisar
 const handleSearch = () => {
   tableData.value = [...backupData].filter((item) =>
     item.Name?.toLowerCase().includes(search.value.toLowerCase()),
   )
 }
 
+// Limpar filtros
 const clearFilters = () => {
   currentPage.value = 1 // Reseta a página
   tableData.value = [...backupData]
 }
 
+// Paginação
+const handleSizeChange = (newSize: number) => {
+  pageSize.value = newSize
+  currentPage.value = 1
+}
+const handlePageChange = (newPage: number) => {
+  currentPage.value = newPage
+}
+
+/* ------------------------------------------------------------------
+   onMounted
+   ------------------------------------------------------------------ */
 onMounted(async () => {
   const rawResponse = await fetch('https://naked-eydie-bellos-tech-3517c645.koyeb.app/products', {
     method: 'GET',
@@ -232,7 +182,10 @@ onMounted(async () => {
     },
   })
 
-  tableData.value = [...(await rawResponse.json())].filter((item) => item.Category !== 'deleted')
+  const allProducts = await rawResponse.json()
+  // Filtra apenas aqueles que estão com Category = 'deleted'
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  tableData.value = allProducts.filter((item: any) => item.Category === 'deleted')
   backupData = [...tableData.value]
   isLoading.value = false
 })
@@ -242,10 +195,6 @@ onMounted(async () => {
 .product {
   &__header {
     margin-bottom: 2rem;
-
-    & > button {
-      margin-left: 10px;
-    }
   }
 }
 
@@ -270,10 +219,6 @@ onMounted(async () => {
 .danger-row {
   --el-table-tr-bg-color: var(--el-color-danger-light-9);
 }
-.warning-row {
-  --el-table-tr-bg-color: var(--el-color-warning-light-9);
-}
-
 .yellow-row {
   --el-table-tr-bg-color: var(--el-color-warning-light-9);
 }

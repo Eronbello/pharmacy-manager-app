@@ -53,5 +53,6 @@ declare module 'vue' {
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     Storage: typeof import('./src/components/pages/Storage/index.vue')['default']
+    Trash: typeof import('./src/components/pages/Trash/index.vue')['default']
   }
 }
