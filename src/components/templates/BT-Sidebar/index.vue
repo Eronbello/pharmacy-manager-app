@@ -21,7 +21,16 @@
 
 <script lang="ts" setup>
 import { ref } from 'vue'
-import { Calendar, Money, User, Scissor, UserFilled, Files, Setting } from '@element-plus/icons-vue'
+import {
+  Calendar,
+  Money,
+  User,
+  Scissor,
+  UserFilled,
+  Files,
+  Setting,
+  Delete,
+} from '@element-plus/icons-vue'
 
 interface IMenuItem {
   label: string
@@ -36,6 +45,7 @@ const iconMap = {
   UserFilled,
   Files,
   Setting,
+  Delete,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 } as any
 

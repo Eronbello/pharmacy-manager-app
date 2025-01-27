@@ -13,6 +13,7 @@ const menuItems = [
   // { label: 'Servicos', route: '/services', icon: 'Scissor' },
   // { label: 'Funcionarios', route: '/employees', icon: 'UserFilled' },
   { label: 'Estoque', route: '/storage', icon: 'Files' },
+  { label: 'Lixeira', route: '/trash', icon: 'Delete' },
   // { label: 'Configuracao', route: '/configs', icon: 'Setting' },
 ]
 </script>

@@ -23,8 +23,11 @@
   </div>
   <el-table
     ref="multipleTableRef"
+    show-summary
     :data="tableData"
     :key="key"
+    :summary-method="summaryHandle"
+    sum-text=""
     row-key="ID"
     style="width: 100%"
     height="75vh"
@@ -77,6 +80,37 @@ const tableData = ref([]) as any
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let backupData: any[] = []
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const summaryHandle = ({ columns, data }: any) => {
+  // Array que conterá as células do resumo, 1 para cada coluna
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const sums = [] as any
+
+  // Itera sobre as colunas do el-table
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  columns.forEach((column: any, index: any) => {
+    // Exemplo: primeira coluna mostra apenas a label "Total"
+    if (index === 1) {
+      sums[index] = `Total ${data.length}`
+      return
+    }
+
+    // Verifica se a coluna é a que contém o StockQuantity
+    if (column.property === 'StockQuantity') {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const total = data.reduce((acc: any, item: any) => {
+        // item.StockQuantity ou 0 se for undefined
+        return acc + (Number(item.StockQuantity) || 0)
+      }, 0)
+      sums[index] = total
+    } else {
+      // Para as demais colunas, deixamos vazio
+      sums[index] = ''
+    }
+  })
+
+  return sums
+}
 const tableRowClassName = ({
   row,
   rowIndex,
