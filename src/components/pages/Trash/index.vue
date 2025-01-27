@@ -119,7 +119,7 @@ const restoreRow = async (index: number, row: any) => {
     .then(async () => {
       // Faz a requisição para alterar Category para 'recovered'
       await fetch(`https://naked-eydie-bellos-tech-3517c645.koyeb.app/products/${row.ID}`, {
-        method: 'PATCH',
+        method: 'PUT',
         headers: {
           Accept: 'application/json',
           'Content-Type': 'application/json',

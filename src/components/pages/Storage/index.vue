@@ -140,7 +140,7 @@ const deleteRow = async (index: number, row: any) => {
   ElMessageBox.confirm('Tem certeza que deseja deletar esse item?')
     .then(async () => {
       await fetch(`https://naked-eydie-bellos-tech-3517c645.koyeb.app/products/${row.ID}`, {
-        method: 'patch',
+        method: 'PUT',
         headers: {
           Accept: 'application/json',
           'Content-Type': 'application/json',
